@@ -17,6 +17,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(serveStatic(path.resolve(__dirname,'resources')));
 app.use(fileUpload()); 
+app.use((req,resp,next)=>{
+    logVerbose(`Got request from: ${req.url}`);
+    next();
+})
 
 function ensureProject(fullPath){
     return new Promise((res, rej) => {
@@ -86,7 +90,7 @@ app.post('/upload', async (req, response) => {
             });
             
         }catch(err){
-            console.log(err.message);
+            logVerbose(`An error has occured: ${err.message}`);
             response.send({
                 status: false,
                 data: err.message
@@ -94,6 +98,7 @@ app.post('/upload', async (req, response) => {
         }
         
     }else {
+        logVerbose('No project name provided');
         resp.send({
             status:false,
             data:'Please provide valid project name'
