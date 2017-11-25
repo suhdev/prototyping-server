@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Prototyping Server</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" />
+</head>
+
+<body>
+    <div class="list-group">
+        {% for dir in dirs %}
+        <a href="{{dir}}" class="list-group-item list-group-item-action">
+            {{dir}}
+        </a>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

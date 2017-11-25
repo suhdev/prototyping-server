@@ -5,14 +5,20 @@ const mkdirp = require('mkdirp');
 const zlib = require('zlib');
 const fs = require('fs');
 const args = require('yargs').argv; 
+const nunjucks = require('nunjucks'); 
 const pump = require('pump'); 
 const bodyParser = require('body-parser'); 
 const tar = require('tar');
 const fileUpload = require('express-fileupload');
 const resourcesPath = path.resolve(__dirname,'./resources'); 
 const zipFilesPath = path.resolve(__dirname, './zipfiles'); 
-
 var app = express();
+const njEnv = nunjucks.configure([
+    path.resolve(__dirname,'./templates/'),
+],{
+    express:app,
+    noCache:true
+});
 app.use((req,resp,next)=>{
     logVerbose(`Got request from: ${req.url}`);
     logVerbose(`Got request from: ${req.host}`);
@@ -23,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(serveStatic(path.resolve(__dirname,'resources')));
 app.use(fileUpload()); 
 
-function ensureProject(fullPath){
+function ensurePath(fullPath){
     return new Promise((res, rej) => {
         mkdirp(fullPath, (err) => {
             if (err) {
@@ -42,17 +48,29 @@ function logVerbose(message){
 }
 
 function ensureProjectDirectory(projectName){
-    return ensureProject(path.resolve(resourcesPath, projectName));
+    return ensurePath(path.resolve(resourcesPath, projectName));
 }
+
+app.get('/',async (req,response)=>{
+    fs.readdir(resourcesPath,(err,files)=>{
+        if (err){
+            response.send(`An error has occured: ${err.message}`);
+            return; 
+        }
+        response.render('index.html',{
+            dirs:files,
+        });
+    });
+});
 
 app.post('/upload', async (req, response) => {
     logVerbose(`${(new Date()).toISOString()}: New request has been received`);
     if (req.body.projectName){
 
         try {
-            const projectPath = await ensureProjectDirectory(req.body.projectName); 
+            const projectPath = await ensureProjectDirectory(req.body.projectName);
             const unzipper = zlib.createGunzip(); 
-            const filePath = projectPath + '.gzip';
+            const filePath = path.resolve(zipFilesPath,req.body.projectName+'.gzip');
             logVerbose(`${(new Date()).toISOString()}: Moving file to resources folder`);
             req.files.prototypes.mv(filePath,(err)=>{
                 if (err){
@@ -108,14 +126,19 @@ app.post('/upload', async (req, response) => {
 });
 
 async function init(){
-    await ensureProject(resourcesPath); 
-    await ensureProject(zipFilesPath);
+    await ensurePath(resourcesPath); 
+    await ensurePath(zipFilesPath);
 }
 
-mkdirp(resourcesPath,(err)=>{
+mkdirp(resourcesPath,async (err)=>{
     if (err){
         console.log(`An error has occured: ${err.message}`);
         return; 
+    }
+    try{
+        await init();
+    }catch(err){
+        console.log(`An error has occured: ${err.message}`);
     }
     app.listen(args.port || 7878,(err)=>{
         console.log(`server is up on port ${args.port || 7878}`);

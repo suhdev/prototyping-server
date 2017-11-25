@@ -1,10 +1,10 @@
 {
   "name": "prototyping-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "bin": {
-    "prototyper":"index.js"
+    "prototyper": "index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,5 +23,7 @@
     "tar": "^4.0.2",
     "yargs": "^10.0.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "nunjucks": "^3.0.1"
+  }
 }
