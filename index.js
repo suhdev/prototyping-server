@@ -51,16 +51,51 @@ function ensureProjectDirectory(projectName){
     return ensurePath(path.resolve(resourcesPath, projectName));
 }
 
-app.get('/',async (req,response)=>{
-    fs.readdir(resourcesPath,(err,files)=>{
-        if (err){
-            response.send(`An error has occured: ${err.message}`);
-            return; 
-        }
-        response.render('index.html',{
-            dirs:files,
+function readdir(dirname){
+    return new Promise((res,rej)=>{
+        fs.readdir(resourcesPath, (err, files) => {
+            if (err){
+                rej(err); 
+                return; 
+            }
+            res(files); 
         });
     });
+}
+
+function fileExists(fileName){
+    return new Promise((res,rej)=>{
+        fs.exists(fileName,(result)=>{
+            res(result); 
+        });
+    });
+}
+
+app.get('/',async (req,response)=>{
+    try {
+        let files = await readdir(resourcesPath); 
+        let projects = files.filter(async (e)=>{
+            try{
+                return await fileExists(path.resolve(resourcesPath,e,'project.json'));
+            }catch(err){
+                return false; 
+            }
+        }).map((e)=>{
+            return Object.assign({},
+                require(path.resolve(resourcesPath,e,'project.json')),
+                {
+                    dir:e
+                });
+        });
+        response.render('index.html', {
+            projects
+        });
+
+
+    }catch(err){
+        console.log(`An error has occured ${err.message}`);
+        response.send(err.message);
+    }
 });
 
 app.post('/upload', async (req, response) => {

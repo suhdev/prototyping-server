@@ -18,9 +18,9 @@
             The following is a list of the available projects:
         </p>
         <div class="list-group">
-            {% for dir in dirs %}
-            <a href="{{dir}}" class="list-group-item list-group-item-action">
-                {{dir}}
+            {% for project in projects %}
+            <a href="{{project.dir}}" class="list-group-item list-group-item-action">
+                {{project.title}}
             </a>
             {% endfor %}
         </div>
